@@ -1,0 +1,255 @@
+---
+title: "kurgusal dataset"
+author: "beşire nur çelebi"
+date: "2025-06-23"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig = TRUE) 
+```
+
+# Training Hours vs Salary: A Kurgusal HR Analytics Project
+
+Bu analiz, kurgusal olarak oluşturulmuş 800 çalışandan oluşan bir veri setine dayanmaktadır. Veri seti; yaş, departman, maaş, deneyim süresi ve eğitim saatleri gibi değişkenleri içermektedir. Amaç, eğitim saatlerinin maaş üzerindeki etkisini incelemektir.
+
+```{r}
+set.seed(642)  
+
+data <- data.frame(
+  ID = 1:800,
+  Age = sample(22:60, 800, replace = TRUE),
+  Department = sample(c("HR", "IT", "Sales", "Finance"), 800, replace = TRUE),
+  Salary = sample(seq(26005, 100000, 500), 800, replace = TRUE),
+  Experience = sample(1:30, 800, replace = TRUE),
+  Training_Hours = sample(5:40, 800, replace = TRUE)
+)
+
+View(data)
+
+```
+
+---
+
+```{r}
+mean(data$Salary)
+```
+
+ Veriye göre genel ortalama maaş ₺61.388,12 seviyesindedir. 
+
+---
+
+```{r}
+aggregate(Salary ~ Department, data = data, FUN = mean)
+```
+
+sırasıyla en çok IT>Sales>Finance>HR
+
+Departman bazlı analizde IT ve Sales departmanlarının ortalama maaşlarının diğerlerine göre daha yüksek olduğu görülmektedir; bu da bu bölümlerin stratejik öneme sahip olduğunu veya maaş politikalarının departmanlara göre değiştiğini gösterebilir.
+
+---
+
+### Korelasyonuna baktığımızda, 
+```{r}
+cor(data$Training_Hours, data$Salary)  # Korelasyon
+```
+
+daha çok eğitim almalarına rağmen maaşı düşük olanlar var, yani verimsiz eğitim veriliyor olabilir. 
+Eğitim saatleri ile maaş arasında negatif yönde, ancak oldukça zayıf bir ilişki gözlemlenmiştir. Bu durum, eğitimlerin maaş üzerinde kısa vadede etkili olmadığını göstermektedir.
+
+---
+
+### En çok eğitim alan ilk 5 kişiyi inceleyelim
+
+```{r}
+# En çok eğitim alan ilk 5 kişi
+head(data[order(-data$Training_Hours), ], 5)
+```
+
+Bu tablo, şirketin eğitim politikası hakkında bazı ipuçları veriyor. En çok eğitim alan ilk 5 kişi incelendiğinde, hepsinin 40 saat eğitim aldığı görülüyor. Bu durum bize, ya maksimum alınabilecek eğitim saati sınırına ulaşıldığını ya da bu eğitimin tüm çalışanlara standart olarak uygulandığını düşündürebilir.
+Farklı departmanlardan bireylerin bu listede yer alması, eğitim programının departmanlar arası ortak bir gelişim programı olduğunu düşündürebilir. Örneğin, hem Satış’tan hem BT hem de İnsan Kaynakları’ndan kişiler olması, kurumun genel bir yetkinlik geliştirme hedefi güttüğünü gösterebilir.
+Bir başka dikkat çekici unsur ise deneyim dağılımı: Listede 5 yıl tecrübeli de var, 26 yıl tecrübeli olan da. Bu da, eğitim fırsatlarının sadece genç ya da yeni çalışanlara değil, kıdemli çalışanlara da sunulduğunu gösteriyor. Kurumun, sürekli gelişim yaklaşımını benimsediği izlenimini yaratıyor.
+
+---
+
+# Training Hours vs Salary
+
+```{r}
+library(ggplot2)
+ggplot(data, aes(x = Training_Hours, y = Salary)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", col = "red", se = FALSE) +
+  labs(title = "Training Hours vs Salary",
+       x = "Training Hours",
+       y = "Salary") +
+  theme_minimal()
+```
+
+Grafikte, eğitim saatleri ile maaş arasında anlamlı bir pozitif korelasyon olmadığı açıkça görülmektedir. Kırmızı regresyon çizgisi, bu ilişkinin yönünü göstermekle birlikte, hafif negatif eğilimiyle dikkat çekmektedir. Bu durum, daha fazla eğitim alan çalışanların maaşlarında gözle görülür bir artış olmadığını, hatta yer yer tersine bir eğilim bile olabileceğini göstermektedir.
+Bu bulgu, kurumun maaş politikalarının eğitim saati temelli değil; büyük olasılıkla kıdem, görev seviyesi, uzmanlık alanı veya departman politikaları gibi başka değişkenlere bağlı olduğunu düşündürebilir. Eğitim programlarının tüm çalışanlara eşit şekilde sunulan standart gelişim fırsatları olarak kurgulandığı izlenimi oluşmaktadır.
+
+
+---
+
+# Average Salary by Department
+```{r}
+ggplot(data, aes(x = Department, y = Salary, fill = Department)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  labs(title = "Average Salary by Department",
+       y = "Average Salary") +
+  theme_minimal()
+```
+
+ Grafikte, her bir sütun bir departmanın ortalama maaşını temsil etmekte ve renk farklılıkları sayesinde görsel karşılaştırma oldukça kolaylaşmaktadır. En yüksek ortalama maaş, BT (IT) departmanında gözlemlenmektedir. Bu durum, bu departmandaki pozisyonların teknik uzmanlık gerektirmesi nedeniyle daha yüksek ücretlendirmeye tabi tutulduğunu düşündürebilir.
+ 
+Öte yandan, İnsan Kaynakları (HR) departmanı en düşük ortalama maaşa sahip görünüyor. Bu farklılık, kurumun finansal kaynaklarını daha çok teknik ve operasyonel birimlere yönlendirmiş olabileceğini veya stratejik önceliklerin bu alanlarda yoğunlaştığını gösterebilir.
+
+Departmanlar arası maaş farklarının altında şu gibi faktörler yatıyor olabilir:
+- Piyasa bazlı ücret seviyeleri
+- Departman içi pozisyon hiyerarşisi (uzman, yönetici, direktör vb.)
+- Çalışanların deneyim seviyeleri ve eğitim geçmişleri
+
+Bu farklılıkların azaltılması adına, kurumun departman bazlı maaş politikalarını gözden geçirmesi faydalı olabilir. Örneğin, benzer sorumluluk düzeyine sahip pozisyonların departmanlar arasında karşılaştırılması; performans kriterlerine dayalı teşvik sistemleri kurulması; ve özellikle destek birimlerinde çalışan motivasyonunu artırmaya yönelik stratejiler geliştirilmesi önerilebilir.
+
+---
+
+```{r}
+aggregate(Age ~ Department, data = data, FUN = mean)
+```
+
+- IT departmanında ortalama yaşın daha yüksek olması, bu alandaki pozisyonların daha deneyim gerektiren roller olabileceğini gösteriyor olabilir. Uzmanlık ve teknik bilgi birikimi önemli olabilir.
+
+- Satış departmanının ortalama yaşının düşük olması, daha genç ve dinamik kadroların bu departmanda yer aldığını veya bu alanda yüksek çalışan sirkülasyonu olduğunu düşündürebilir.
+
+- Departmanlar arası yaş farkı çok büyük olmasa da, bu fark organizasyonel yapı ve kariyer yolları hakkında bazı ipuçları veriyor.
+
+---
+
+```{r}
+cor(data$Experience, data$Salary)
+```
+
+ Korelasyon katsayısı -1 ile +1 arasında değişir. -1 mükemmel negatif ilişki, +1 mükemmel pozitif ilişki ve 0 ise hiçbir ilişki olmadığını gösterir. Bu örnekteki -0.031, neredeyse sıfıra çok yakın ve negatif bir ilişki olduğunu gösteriyor. Yani deneyim arttıkça maaşların biraz azalması gibi hafif bir eğilim olabilir, ama bu ilişki çok zayıf, hatta istatistiksel olarak anlamlı bile olmayabilir.
+
+- Şirketteki maaş politikası, deneyimden ziyade başka faktörlere bağlı olabilir: örneğin, departman, pozisyon seviyesi veya eğitim durumu.
+
+- Deneyimi fazla olan kişiler düşük maaşlı pozisyonlarda çalışıyor olabilir ya da yeni başlayan fakat teknik becerileri güçlü olanlar yüksek maaşla başlamış olabilir.
+
+- Bu sonuç şaşırtıcı olabilir çünkü genellikle deneyim arttıkça maaş da artar. Bu nedenle bu kurumda deneyimle maaş arasında beklenen pozitif ilişki gözlenmemiş.
+
+---
+
+```{r}
+ggplot(data, aes(x = Experience, y = Salary)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Experience vs Salary",
+    x = "Years of Experience",
+    y = "Salary (₺)"
+  )
+```
+
+Grafik, yıllara dayalı deneyim ile maaş arasındaki ilişkiyi görselleştirmekte olup, genel beklentinin aksine bu ilişki oldukça zayıf görünmektedir. Veri noktalarının yayılımı düzensizdir ve regresyon çizgisi neredeyse yatay seyretmektedir; bu da deneyimle birlikte anlamlı bir maaş artışı olmadığını göstermektedir. Hatta bazı çok tecrübeli bireylerin görece düşük maaşlar aldığı, bu ilişkinin ters bile işleyebileceğini düşündürmektedir.
+Bu durum aşağıdaki olasılıkları akla getirmektedir:
+- Pozisyon ve görev tanımı, maaş üzerinde deneyimden daha belirleyici olabilir.
+- Teknik yeterlilik veya performansa dayalı ücret politikaları, klasik kıdeme dayalı maaş modelinin önüne geçmiş olabilir.
+- Ayrıca şirketin yapısında yüksek maaşla başlayan ama düşük deneyimli bireyler bulunması da bu korelasyonu zayıflatmış olabilir.
+
+---
+
+```{r}
+data[data$Experience > 10 & data$Salary < 30000, ]
+```
+ 
+bunlar undervalued kişielr.
+
+Bu filtreleme sonucunda elde edilen çalışan profilleri, 10 yıldan fazla deneyime sahip olmalarına rağmen 30.000 TL’nin altında maaş alan bireyleri içermektedir. Bu durum, yüksek deneyim – düşük maaş dengesizliğiyle tanımlanabilecek bir grup ortaya koymaktadır.
+Bu çalışanlar, çeşitli departmanlara dağılmış olmalarına rağmen ortak özellikleri; uzun kıdemlerine rağmen görece düşük ücret almalarıdır. Böyle bir profil, organizasyonel açıdan potansiyel risk taşıyan bir segment olarak değerlendirilebilir. Zira kendilerini yeterince takdir edilmemiş hisseden deneyimli çalışanlar, motivasyon düşüklüğü, işten ayrılma eğilimi veya verim kaybı gibi olumsuz sonuçlara yol açabilir.
+
+Öneriler:
+- Bu kişilerin bulundukları rollerin kapsamı ve maaş politikaları gözden geçirilerek maaş gözden geçirme veya görev iyileştirmesi yapılabilir.
+- Performans görüşmeleri ve kariyer gelişim planlarıyla bu bireylerin elde tutulması sağlanabilir.
+- Bu bulgu, ücretlendirme sisteminde kıdeme dayalı dengenin ne ölçüde sağlandığını sorgulamak için iyi bir fırsattır.
+
+
+---
+
+```{r}
+data$Training_Level <- cut(data$Training_Hours,
+                           breaks = c(0, 10, 20, 30, 40),
+                           labels = c("Az", "Orta", "Yuksek", "Cok Yuksek"))
+aggregate(Salary ~ Training_Level, data, mean)
+
+```
+
+Bu tablo, eğitim saatleri artırıldıkça maaşların da artacağı yönündeki yaygın beklentiyi desteklememektedir. Aksine, ortalama maaşlar eğitim seviyesi arttıkça düşmektedir: “Az” eğitimli çalışanlar 65.648 TL ile en yüksek ortalama maaşı alırken, “Çok Yüksek” eğitim alanlarda bu rakam 59.047 TL’ye kadar gerilemektedir.
+Bu tersine eğilim çeşitli nedenlerle açıklanabilir:
+- Eğitim programları büyük olasılıkla kariyerinin erken aşamasındaki, dolayısıyla maaş düzeyi görece düşük bireylere sunuluyor olabilir.
+- Daha kıdemli ve yüksek maaşlı çalışanlar, bu tür eğitimlere daha az ihtiyaç duymakta ya da katılım göstermemektedir.
+- Kurumsal yapı gereği, eğitimi daha çok gelişim potansiyeli yüksek bireylere yatırım olarak sunan bir anlayış benimsenmiş olabilir.
+
+
+---
+
+```{r}
+ggplot(data, aes(x = Department, y = Salary)) +
+  geom_boxplot(fill = "skyblue") +
+  labs(title = "Salary Distribution by Department")
+```
+
+- En yüksek medyan maaş hangi departmandaysa (örneğin Finans), bu departman çalışanlarının genel olarak daha yüksek ücret aldığı söylenebilir.
+
+- Maaş dağılımı geniş olan departmanlar, çalışanlar arasında ciddi bir maaş farkı olduğunu gösterir. Bu da pozisyon çeşitliliğinin (uzman, müdür vs.) fazla olabileceğini düşündürebilir.
+
+- Bazı departmanlarda maaşlar daha sıkışık, yani tüm çalışanlar benzer seviyelerde maaş alıyor olabilir.
+
+- Eğer aykırı değerler varsa, bunlar yüksek pozisyondaki bireyler (örneğin yöneticiler) olabilir.
+
+Bu grafik, departmanlar arası sadece ortalama maaşları değil, aynı zamanda maaş eşitsizliğini ve yapısal farklılıkları da görmemizi sağlıyor. Bu tür bir analiz, hem İK politikaları hem de ücretlendirme stratejilerinde tutarlılık veya dengesizlik olup olmadığını değerlendirmek için oldukça kullanışlı.
+
+---
+
+```{r}
+ggplot(data, aes(x = Experience, y = Salary, color = Training_Level)) +
+  geom_point(size = 3) +
+  labs(title = "Experience vs Salary by Training Level")
+```
+
+Tüm eğitim düzeyleri için deneyim arttıkça maaşın doğrusal olmayan, dağınık bir şekilde değiştiği görülüyor. Net bir pozitif veya negatif trend görünmüyor. Bazı düşük deneyimli bireylerin yüksek maaşlı pozisyonlarda olması dikkat çekici.
+
+- Az eğitimli bireylerin maaşları daha yüksek seviyelere çıkabiliyor gibi görünüyor. Bu kişiler belki de yönetsel veya kıdemli çalışanlar.
+
+- Çok Yüksek eğitim alanların genellikle maaşı orta düzeyde toplanmış — bu da bu grubun daha çok yeni başlayanlar veya gelişim aşamasındaki çalışanlar olduğunu düşündürebilir.
+
+- Orta ve Yüksek düzeyde eğitim alanlar da benzer şekilde maaş dağılımında belirgin bir avantaja sahip değil.
+
+- Eğitim düzeyi maaş üzerinde belirleyici bir faktör değil, belki de bu kurumda eğitim, beceri gelişimi ya da kurumsal gereklilik amaçlı veriliyordur.
+
+- Maaşları asıl etkileyen unsurlar deneyim, departman, pozisyon düzeyi veya teknik uzmanlık olabilir.
+
+Bu grafik, eğitim seviyesi ile maaş arasında güçlü bir ilişki olmadığını ama eğitim düzeylerinin genel eğilimleri yansıtmak için anlamlı bir segmentasyon sağlayabileceğini gösteriyor. Üstelik bu görselleştirme sayesinde kurumda hangi eğitim düzeyi grubunun ne tip kariyer yoluna sahip olduğu hakkında sezgisel bir bakış açısı da elde edilebiliyor.
+
+
+---
+
+```{r}
+data$Salary_per_TrainingHour <- data$Salary / data$Training_Hours
+head(data[order(data$Salary_per_TrainingHour), ], 5)
+
+```
+
+- Tabloda yer alan kişilerin tümü 39–40 saatlik maksimum eğitim almış ve genelde "Çok Yüksek" eğitim seviyesine sahip.
+
+- Buna karşın maaşları görece düşük (örneğin: 26.000–29.000 arası). Bu da kurumda eğitim yoğunluğu yüksek olan çalışanların daha az ücretle çalışıyor olabileceğini gösteriyor.
+
+- Örneğin ID 5 olan kişi, 26 yaşında, 26 yıl deneyim ile oldukça ilginç bir profil — bu durum bir veri anomalisine ya da verinin yorumlanmasında olası bir karışıklığa işaret edebilir.
+
+- Bu metrik, çalışanı değerlendirmekten çok kurumun kaynak kullanım verimliliğine dair bir fikir verir. Kurum, daha az maaşla çok eğitim alan bireylerle daha çok yatırım yapıyor olabilir. Ancak bu kişiler, belki de kariyerinin erken aşamasında oldukları için daha düşük maaşla daha fazla gelişim fırsatına erişiyor olabilir.
+
+Bu çalışanların maaş politikaları yeniden gözden geçirilmeli; hem organizasyonel sadakati korumak hem de yapılan eğitim yatırımlarının sürdürülebilir olmasını sağlamak adına eşleşen bir takdir mekanizması kurulmalıdır.
+
+
+
+Bu analiz, çalışanlara yapılan eğitim yatırımı ile maaş karşılığının her zaman paralel ilerlemediğini göstermektedir. Eğitim seviyesi ve süresi yüksek bireylerin, düşük maaş aralığında yer alması; organizasyon içinde potansiyel yeteneklerin fark edilmemesi ya da ödüllendirilmemesi riskini doğurabilir. Bu durum, yalnızca bireysel motivasyonu değil, aynı zamanda kurumun gelişim yatırımlarının geri dönüşünü de etkileyebilir. Dolayısıyla, eğitim ve maaş politikalarının birbirini destekleyecek şekilde yeniden yapılandırılması, hem çalışan bağlılığı hem de verimlilik açısından stratejik bir fırsat sunmaktadır.
+
